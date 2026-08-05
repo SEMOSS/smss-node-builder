@@ -44,7 +44,7 @@ spec:
               app: build-service
       containers:
         - name: build-service
-          image: your-registry/build-service:latest
+          image: quay.io/semoss/smss-node-builder:latest
           ports:
             - containerPort: 3000
           envFrom:

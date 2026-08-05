@@ -31,6 +31,12 @@ docker build -t smss-node-builder .
 docker run -p 3000:3000 smss-node-builder
 ```
 
+The published multi-architecture image is available at:
+
+```bash
+docker pull quay.io/semoss/smss-node-builder:latest
+```
+
 ### Send a build
 
 ```bash
@@ -121,11 +127,10 @@ Set via environment variables or the Kubernetes ConfigMap.
 ## Kubernetes deployment
 
 ```bash
-# Set your image registry
-sed -i 's|your-registry/build-service:latest|ghcr.io/your-org/smss-node-builder:latest|' k8s-manifests.yaml
-
 kubectl apply -f k8s-manifests.yaml
 ```
+
+The deployment uses `quay.io/semoss/smss-node-builder:latest`.
 
 The manifest includes:
 

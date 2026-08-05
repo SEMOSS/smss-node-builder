@@ -1,4 +1,4 @@
-# CLAUDE.md
+# AGENTS.md
 
 ## Project overview
 
@@ -103,11 +103,10 @@ docker run -p 3000:3000 build-service
 ## Kubernetes
 
 ```bash
-# Replace the image placeholder first
-sed -i 's|your-registry/build-service:latest|ghcr.io/your-org/build-service:latest|' k8s-manifests.yaml
-
 kubectl apply -f k8s-manifests.yaml
 ```
+
+The deployment uses `quay.io/semoss/smss-node-builder:latest`.
 
 The HPA scales between 2 and 10 pods based on CPU (70%) and memory (75%)
 utilisation. Each pod handles up to 3 concurrent builds.
