@@ -2,7 +2,8 @@ name: Build smss-node-builder image
 
 on:
   push:
-  workflow_dispatch:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -91,11 +92,10 @@ jobs:
         id: tags
         shell: bash
         run: |
-          tags=( "-t" "${IMAGE}:${GITHUB_SHA}" )
-          if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
-            tags+=( "-t" "${IMAGE}:latest" )
-          fi
+          date_tag=$(date -u +'%Y-%m-%d')
+          tags=( "-t" "${IMAGE}:${date_tag}" "-t" "${IMAGE}:latest" )
           echo "args=${tags[*]}" >> "$GITHUB_OUTPUT"
+          echo "date_tag=${date_tag}" >> "$GITHUB_OUTPUT"
 
       - name: Create and push multi-architecture image
         working-directory: /tmp/digests
@@ -105,4 +105,4 @@ jobs:
             $(printf "${IMAGE}@sha256:%s " *)
 
       - name: Inspect multi-architecture image
-        run: docker buildx imagetools inspect "${IMAGE}:${GITHUB_SHA}"
+        run: docker buildx imagetools inspect "${IMAGE}:${{ steps.tags.outputs.date_tag }}"
