@@ -1,4 +1,4 @@
-FROM node:24-alpine
+FROM public.ecr.aws/docker/library/node:24-alpine
 
 RUN corepack enable && corepack prepare pnpm@11.9.0 --activate
 
