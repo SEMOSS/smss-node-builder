@@ -2,7 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import { spawn } from 'child_process';
 import { randomUUID } from 'crypto';
-import { mkdir, rm, rename, access } from 'fs/promises';
+import { mkdir, rm, access } from 'fs/promises';
 import { join } from 'path';
 import extractZip from 'extract-zip';
 import archiver from 'archiver';
@@ -111,23 +111,20 @@ app.post(
     const workDir = join(WORK_DIR, randomUUID());
 
     try {
-      await mkdir(workDir, { recursive: true });
+      const subDir = join(workDir, `${randomUUID()}-wrap`);
+      await mkdir(subDir, { recursive: true });
 
       // ── 1. Extract zip ────────────────────────────────────────────────────
-      await extractZip(req.file.path, { dir: workDir });
+      await extractZip(req.file.path, { dir: subDir });
       await rm(req.file.path, { force: true }).catch(() => {});
 
       // ── 2. Locate the client dir ──────────────────────────────────────────
       let buildDir;
 
-      if (await pathExists(join(workDir, 'client', 'package.json'))) {
-        buildDir = join(workDir, 'client');
-      } else if (await pathExists(join(workDir, 'package.json'))) {
-        const tmpName = join(WORK_DIR, `${randomUUID()}-wrap`);
-        await rename(workDir, tmpName);
-        await mkdir(workDir, { recursive: true });
-        await rename(tmpName, join(workDir, 'client'));
-        buildDir = join(workDir, 'client');
+      if (await pathExists(join(subDir, 'client', 'package.json'))) {
+        buildDir = join(subDir, 'client');
+      } else if (await pathExists(join(subDir, 'package.json'))) {
+        buildDir = subDir;
       } else {
         return res.status(400).json({ error: 'No package.json found in uploaded zip' });
       }
