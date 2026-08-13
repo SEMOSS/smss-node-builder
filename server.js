@@ -209,9 +209,9 @@ app.post(
       }
     } finally {
       activeBuilds--;
-      res.on('close', () => {
-        rm(workDir, { recursive: true, force: true }).catch(() => {});
-      });
+      // avoid race: res.on('close') can trigger before the listener attaches, leaving temp files behind.
+      rm(workDir, { recursive: true, force: true }).catch(() => {});
+      console.log(`Cleaned up workDir: ${workDir}`);
     }
   }
 );
