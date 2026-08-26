@@ -1,0 +1,56 @@
+---
+apiVersion: keda.sh/v1alpha1
+kind: ClusterTriggerAuthentication
+metadata:
+  name: google-workload-identity-auth
+spec:
+  podIdentity:
+    provider: gcp
+
+---
+apiVersion: monitoring.googleapis.com/v1
+kind: PodMonitoring
+metadata:
+  name: build-service-monitor
+  namespace: build-system
+spec:
+  selector:
+    matchLabels:
+      app: build-service
+  endpoints:
+    - port: build-service-http
+      path: /metrics
+      interval: 15s
+
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: build-service-scaledobject
+  namespace: build-system
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: build-service
+  minReplicaCount: 1
+  maxReplicaCount: 6
+  advanced:
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleDown:
+          stabilizationWindowSeconds: 60 
+  triggers:
+    - type: prometheus
+      metadata:
+        serverAddress: https://monitoring.googleapis.com/v1/projects/<YOUR_PROJECT_ID>/location/global/prometheus
+        query: sum(active_builds{namespace="build-system"})
+        threshold: "3"
+    - type: cpu
+      metricType: Utilization
+      metadata:
+        value: "70"
+    - type: memory
+      metricType: Utilization
+      metadata:
+        value: "75"

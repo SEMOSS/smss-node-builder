@@ -6,6 +6,7 @@ import { mkdir, rm, access } from 'fs/promises';
 import { join } from 'path';
 import extractZip from 'extract-zip';
 import archiver from 'archiver';
+import { register, Gauge} from 'prom-client'
 
 // Config from env vars with defaults
 const PORT = parseInt(process.env.PORT || '3000', 10);
@@ -15,6 +16,12 @@ const BUILD_TIMEOUT_MS = parseInt(process.env.BUILD_TIMEOUT_MS || '300000', 10);
 const MAX_UPLOAD_MB = parseInt(process.env.MAX_UPLOAD_MB || '100', 10);
 const WORK_DIR = process.env.WORK_DIR || '/tmp/builds';
 const UPLOADS_DIR = process.env.UPLOADS_DIR || '/tmp/uploads';
+
+// Config Gauge
+const gauge = new Gauge({
+  name: 'active_builds',
+  help: 'Number of builds currently in progress'
+});
 
 // Simple counter — no job Map needed for synchronous mode
 let activeBuilds = 0;
@@ -108,7 +115,9 @@ app.post(
     }
 
     activeBuilds++;
+    gauge.inc();
     const workDir = join(WORK_DIR, randomUUID());
+    await new Promise(r => setTimeout(r, 90_000)); // 90s test delay
 
     try {
       const subDir = join(workDir, `${randomUUID()}-wrap`);
@@ -209,6 +218,7 @@ app.post(
       }
     } finally {
       activeBuilds--;
+      gauge.dec();
       // avoid race: res.on('close') can trigger before the listener attaches, leaving temp files behind.
       rm(workDir, { recursive: true, force: true }).catch(() => {});
       console.log(`Cleaned up workDir: ${workDir}`);
@@ -220,6 +230,7 @@ app.post(
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
+    pod: process.env.HOSTNAME || 'unknown',
     activeBuilds,
     maxConcurrent: MAX_CONCURRENT_BUILDS,
   });
@@ -228,10 +239,16 @@ app.get('/health', (req, res) => {
 // GET /ready
 app.get('/ready', (req, res) => {
   if (activeBuilds < MAX_CONCURRENT_BUILDS) {
-    res.status(200).json({ status: 'ready', activeBuilds });
+    res.status(200).json({ status: 'ready', pod: process.env.HOSTNAME || 'unknown', activeBuilds });
   } else {
-    res.status(503).json({ error: 'Pod at capacity' });
+    res.status(503).json({ error: 'Pod at capacity', pod: process.env.HOSTNAME || 'unknown' });
   }
+});
+
+// Get /metrics
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', register.contentType);
+  res.send(await register.metrics());
 });
 
 app.listen(PORT, () => {
