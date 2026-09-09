@@ -3,6 +3,7 @@ FROM public.ecr.aws/docker/library/node:24-alpine
 RUN corepack enable && corepack prepare pnpm@11.9.0 --activate
 
 ENV PNPM_CONFIG_DANGEROUSLY_ALLOW_ALL_BUILDS=true \
+    PNPM_CONFIG_MINIMUM_RELEASE_AGE=140 \
     COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 
 # Install required system utilities
