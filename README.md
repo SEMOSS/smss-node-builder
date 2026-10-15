@@ -163,9 +163,18 @@ Output is extracted to `./dist-output/`.
 
 ## Tech stack
 
-- **Runtime**: Node.js 20, ESM
+- **Runtime**: Node.js 24 on Alpine 3.24, ESM
 - **Framework**: Express 4
 - **Upload handling**: multer
 - **Zip extraction**: extract-zip
 - **Zip creation**: archiver
-- **Package manager (client builds)**: pnpm (via corepack in the Docker image)
+- **Package manager (client builds)**: pnpm 11.28.5, installed directly in the Docker image
+
+The image uses pnpm for client builds and retains npm 11.21.0 and npx for scripts
+inside uploaded apps. npm's flagged bundled modules are replaced with versions
+locked in `npm-security/`, and the installed toolchain is checked during image
+builds. Corepack is removed. Uploaded projects use the image's pnpm version even
+when their `packageManager` field pins a different version.
+
+See [security update notes](SECURITY_UPDATES.md) for the dependency changes,
+validation results, and remaining scan requirements.

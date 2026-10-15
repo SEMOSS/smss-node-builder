@@ -1,0 +1,4 @@
+overrides:
+  brace-expansion@2: 2.1.7
+  lodash@4: 4.18.1
+  proxy-addr@2: 2.0.8

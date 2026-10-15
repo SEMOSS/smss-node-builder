@@ -1,0 +1,9 @@
+{
+  "name": "node-builder-npm-security-dependencies",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "brace-expansion": "5.0.12",
+    "http-cache-semantics": "4.3.0"
+  }
+}
