@@ -11,6 +11,7 @@ const minimums = {
   'http-cache-semantics': '4.3.0',
   'ip-address': '10.3.1',
   tar: '7.5.21',
+  undici: '6.29.1',
 };
 const found = new Set();
 const globalRoot = resolve(process.argv[2] || '/usr/local/lib/node_modules');

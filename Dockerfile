@@ -1,8 +1,8 @@
 FROM public.ecr.aws/docker/library/node:24-alpine3.24
 
 # Keep npm/npx for uploaded app scripts, and install pnpm directly for the
-# non-root builder. npm 11.21.0 still bundles two flagged dependency versions,
-# so replace those modules using a separately locked installation.
+# non-root builder. npm 11.21.0 and pnpm 11.28.5 still bundle flagged dependency
+# versions, so replace those modules using a separately locked installation.
 COPY npm-security/package.json npm-security/package-lock.json /tmp/npm-security/
 COPY scripts/verify-toolchain.mjs /tmp/verify-toolchain.mjs
 RUN corepack disable \
@@ -11,10 +11,15 @@ RUN corepack disable \
     && rm -rf /usr/local/lib/node_modules/npm/node_modules/brace-expansion \
         /usr/local/lib/node_modules/npm/node_modules/http-cache-semantics \
         /usr/local/lib/node_modules/npm/node_modules/balanced-match \
+        /usr/local/lib/node_modules/npm/node_modules/undici \
+        /usr/local/lib/node_modules/pnpm/dist/node_modules/undici \
     && cp -a /tmp/npm-security/node_modules/brace-expansion \
         /tmp/npm-security/node_modules/http-cache-semantics \
         /tmp/npm-security/node_modules/balanced-match \
+        /tmp/npm-security/node_modules/undici \
         /usr/local/lib/node_modules/npm/node_modules/ \
+    && cp -a /tmp/npm-security/node_modules/undici \
+        /usr/local/lib/node_modules/pnpm/dist/node_modules/ \
     && node /tmp/verify-toolchain.mjs \
     && npm cache clean --force \
     && rm -rf /tmp/npm-security /tmp/verify-toolchain.mjs \

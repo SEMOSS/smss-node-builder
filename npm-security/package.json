@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "brace-expansion": "5.0.12",
-    "http-cache-semantics": "4.3.0"
+    "http-cache-semantics": "4.3.0",
+    "undici": "6.29.1"
   }
 }
